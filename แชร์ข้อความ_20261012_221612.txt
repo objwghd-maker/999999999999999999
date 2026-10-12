@@ -1,0 +1,661 @@
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+local RunService = game:GetService("RunService")
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "DeltaSpectateGui"
+ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+ScreenGui.ResetOnSpawn = false
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Size = UDim2.new(0, 220, 0, 300)
+MainFrame.Position = UDim2.new(0.05, 0, 0.3, 0)
+MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.ClipsDescendants = true
+MainFrame.Parent = ScreenGui
+
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 8)
+UICorner.Parent = MainFrame
+
+local UIStroke = Instance.new("UIStroke")
+UIStroke.Color = Color3.fromRGB(0, 150, 255)
+UIStroke.Thickness = 1.5
+UIStroke.Parent = MainFrame
+
+local Title = Instance.new("TextLabel")
+Title.Name = "Title"
+Title.Size = UDim2.new(1, -95, 0, 35)
+Title.Position = UDim2.new(0, 5, 0, 0)
+Title.BackgroundTransparency = 1
+Title.Text = "PLAYER SPECTATE"
+Title.TextColor3 = Color3.fromRGB(0, 200, 255)
+Title.TextSize = 14
+Title.Font = Enum.Font.GothamBold
+Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.Parent = MainFrame
+
+local ToggleButton = Instance.new("TextButton")
+ToggleButton.Name = "ToggleButton"
+ToggleButton.Size = UDim2.new(0, 25, 0, 25)
+ToggleButton.Position = UDim2.new(1, -30, 0, 5)
+ToggleButton.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
+ToggleButton.Text = "-"
+ToggleButton.TextColor3 = Color3.fromRGB(0, 200, 255)
+ToggleButton.TextSize = 16
+ToggleButton.Font = Enum.Font.GothamBold
+ToggleButton.Parent = MainFrame
+
+local ToggleCorner = Instance.new("UICorner")
+ToggleCorner.CornerRadius = UDim.new(0, 6)
+ToggleCorner.Parent = ToggleButton
+
+local SaveButton = Instance.new("TextButton")
+SaveButton.Name = "SaveButton"
+SaveButton.Size = UDim2.new(0, 25, 0, 25)
+SaveButton.Position = UDim2.new(1, -55, 0, 5)
+SaveButton.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
+SaveButton.Text = "💻"
+SaveButton.TextSize = 14
+SaveButton.Font = Enum.Font.Gotham
+SaveButton.Parent = MainFrame
+
+local SaveCorner = Instance.new("UICorner")
+SaveCorner.CornerRadius = UDim.new(0, 6)
+SaveCorner.Parent = SaveButton
+
+local TeleportButton = Instance.new("TextButton")
+TeleportButton.Name = "TeleportButton"
+TeleportButton.Size = UDim2.new(0, 25, 0, 25)
+TeleportButton.Position = UDim2.new(1, -80, 0, 5)
+TeleportButton.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
+TeleportButton.Text = "🤖"
+TeleportButton.TextSize = 14
+TeleportButton.Font = Enum.Font.Gotham
+TeleportButton.Parent = MainFrame
+
+local TeleportCorner = Instance.new("UICorner")
+TeleportCorner.CornerRadius = UDim.new(0, 6)
+TeleportCorner.Parent = TeleportButton
+
+local ScrollingFrame = Instance.new("ScrollingFrame")
+ScrollingFrame.Size = UDim2.new(1, -20, 1, -85)
+ScrollingFrame.Position = UDim2.new(0, 10, 0, 40)
+ScrollingFrame.BackgroundTransparency = 1
+ScrollingFrame.BorderSizePixel = 0
+ScrollingFrame.ScrollBarThickness = 4
+ScrollingFrame.ScrollBarImageColor3 = Color3.fromRGB(0, 150, 255)
+ScrollingFrame.Parent = MainFrame
+
+local UIListLayout = Instance.new("UIListLayout")
+UIListLayout.Padding = UDim.new(0, 5)
+UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+UIListLayout.Parent = ScrollingFrame
+
+local ResetButton = Instance.new("TextButton")
+ResetButton.Name = "ResetButton"
+ResetButton.Size = UDim2.new(1, -20, 0, 30)
+ResetButton.Position = UDim2.new(0, 10, 1, -40)
+ResetButton.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
+ResetButton.Text = "กลับมาที่ตัวเอง (Reset View)"
+ResetButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ResetButton.TextSize = 12
+ResetButton.Font = Enum.Font.GothamBold
+ResetButton.Parent = MainFrame
+
+local ResetCorner = Instance.new("UICorner")
+ResetCorner.CornerRadius = UDim.new(0, 6)
+ResetCorner.Parent = ResetButton
+
+local ConfirmFrame = Instance.new("Frame")
+ConfirmFrame.Name = "ConfirmFrame"
+ConfirmFrame.Size = UDim2.new(1, 0, 1, -35)
+ConfirmFrame.Position = UDim2.new(0, 0, 0, 35)
+ConfirmFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+ConfirmFrame.BorderSizePixel = 0
+ConfirmFrame.Visible = false
+ConfirmFrame.ZIndex = 10
+ConfirmFrame.Parent = MainFrame
+
+local ConfirmCorner = Instance.new("UICorner")
+ConfirmCorner.CornerRadius = UDim.new(0, 8)
+ConfirmCorner.Parent = ConfirmFrame
+
+local ConfirmText = Instance.new("TextLabel")
+ConfirmText.Size = UDim2.new(1, -20, 0, 60)
+ConfirmText.Position = UDim2.new(0, 10, 0, 30)
+ConfirmText.BackgroundTransparency = 1
+ConfirmText.Text = "ต้องการเซฟตำแหน่ง\nตรงนี้หรือไม่?"
+ConfirmText.TextColor3 = Color3.fromRGB(255, 255, 255)
+ConfirmText.TextSize = 13
+ConfirmText.Font = Enum.Font.GothamBold
+ConfirmText.TextWrapped = true
+ConfirmText.ZIndex = 11
+ConfirmText.Parent = ConfirmFrame
+
+local YesButton = Instance.new("TextButton")
+YesButton.Size = UDim2.new(0, 75, 0, 32)
+YesButton.Position = UDim2.new(0.5, -80, 1, -60)
+YesButton.BackgroundColor3 = Color3.fromRGB(0, 170, 80)
+YesButton.Text = "ใช่"
+YesButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+YesButton.TextSize = 13
+YesButton.Font = Enum.Font.GothamBold
+YesButton.ZIndex = 11
+YesButton.Parent = ConfirmFrame
+
+local YesCorner = Instance.new("UICorner")
+YesCorner.CornerRadius = UDim.new(0, 6)
+YesCorner.Parent = YesButton
+
+local NoButton = Instance.new("TextButton")
+NoButton.Size = UDim2.new(0, 75, 0, 32)
+NoButton.Position = UDim2.new(0.5, 5, 1, -60)
+NoButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+NoButton.Text = "ไม่"
+NoButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+NoButton.TextSize = 13
+NoButton.Font = Enum.Font.GothamBold
+NoButton.ZIndex = 11
+NoButton.Parent = ConfirmFrame
+
+local NoCorner = Instance.new("UICorner")
+NoCorner.CornerRadius = UDim.new(0, 6)
+NoCorner.Parent = NoButton
+
+local isMinimized = false
+local savedPosition = nil
+local activeSpectatingPlayer = nil
+local clickCounts = {}
+local rainbowTargets = {}
+local playerButtons = {}
+local playerHighlights = {}
+
+local RainbowLine = Instance.new("Frame")
+RainbowLine.Name = "RainbowLine"
+RainbowLine.AnchorPoint = Vector2.new(0, 0.5)
+RainbowLine.Size = UDim2.new(0, 0, 0, 3)
+RainbowLine.Position = UDim2.new(0, 0, 0, 0)
+RainbowLine.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+RainbowLine.BorderSizePixel = 0
+RainbowLine.Visible = false
+RainbowLine.ZIndex = 20
+RainbowLine.Parent = ScreenGui
+
+local RainbowLineCorner = Instance.new("UICorner")
+RainbowLineCorner.CornerRadius = UDim.new(1, 0)
+RainbowLineCorner.Parent = RainbowLine
+
+local TargetInfo = Instance.new("TextLabel")
+TargetInfo.Name = "RainbowTargetInfo"
+TargetInfo.Size = UDim2.new(0, 230, 0, 76)
+TargetInfo.Position = UDim2.new(0, 12, 0, 70)
+TargetInfo.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+TargetInfo.BackgroundTransparency = 0.15
+TargetInfo.BorderSizePixel = 0
+TargetInfo.Text = ""
+TargetInfo.TextColor3 = Color3.fromRGB(255, 255, 255)
+TargetInfo.TextSize = 13
+TargetInfo.Font = Enum.Font.GothamBold
+TargetInfo.TextWrapped = true
+TargetInfo.TextXAlignment = Enum.TextXAlignment.Left
+TargetInfo.TextYAlignment = Enum.TextYAlignment.Center
+TargetInfo.Visible = false
+TargetInfo.ZIndex = 21
+TargetInfo.Parent = ScreenGui
+
+local TargetInfoCorner = Instance.new("UICorner")
+TargetInfoCorner.CornerRadius = UDim.new(0, 8)
+TargetInfoCorner.Parent = TargetInfo
+
+local TargetInfoStroke = Instance.new("UIStroke")
+TargetInfoStroke.Thickness = 1.5
+TargetInfoStroke.Color = Color3.fromRGB(255, 0, 0)
+TargetInfoStroke.Parent = TargetInfo
+
+local function getRainbowColor()
+	return Color3.fromHSV((os.clock() * 0.35) % 1, 1, 1)
+end
+
+local function clearRainbow(player)
+	rainbowTargets[player] = nil
+
+	local highlight = playerHighlights[player]
+	if highlight then
+		highlight:Destroy()
+		playerHighlights[player] = nil
+	end
+
+	local button = playerButtons[player]
+	if button then
+		button.TextColor3 = Color3.fromRGB(200, 200, 200)
+	end
+
+	if activeSpectatingPlayer == player then
+		RainbowLine.Visible = false
+		TargetInfo.Visible = false
+	end
+end
+
+local function updateActiveBarColor()
+	for player, btn in pairs(playerButtons) do
+		if btn and btn.Parent then
+			local count = clickCounts[player] or 0
+
+			if count >= 5 and rainbowTargets[player] then
+				btn.BackgroundColor3 = Color3.fromRGB(255, 215, 0)
+				btn.TextColor3 = getRainbowColor()
+			elseif activeSpectatingPlayer == player then
+				btn.BackgroundColor3 = Color3.fromRGB(0, 170, 70)
+				btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+			else
+				btn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+				btn.TextColor3 = Color3.fromRGB(200, 200, 200)
+			end
+		end
+	end
+end
+
+local function enableRainbow(player)
+	if not player or not player.Parent then
+		return
+	end
+
+	rainbowTargets[player] = true
+
+	local character = player.Character
+	if character then
+		local highlight = playerHighlights[player]
+
+		if not highlight or not highlight.Parent then
+			highlight = Instance.new("Highlight")
+			highlight.Name = "DeltaRainbowHighlight"
+			highlight.Adornee = character
+			highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+			highlight.FillTransparency = 0.45
+			highlight.OutlineTransparency = 0
+			highlight.Parent = ScreenGui
+			playerHighlights[player] = highlight
+		else
+			highlight.Adornee = character
+		end
+
+		local color = getRainbowColor()
+		highlight.FillColor = color
+		highlight.OutlineColor = color
+	end
+
+	updateActiveBarColor()
+end
+
+local function resetTarget(player)
+	clearRainbow(player)
+	clickCounts[player] = 0
+
+	if activeSpectatingPlayer == player then
+		activeSpectatingPlayer = nil
+		Title.Text = "PLAYER SPECTATE"
+	end
+
+	updateActiveBarColor()
+end
+
+local function clearAllRainbow()
+	for player in pairs(rainbowTargets) do
+		clearRainbow(player)
+	end
+
+	for player, highlight in pairs(playerHighlights) do
+		if highlight then
+			highlight:Destroy()
+		end
+		playerHighlights[player] = nil
+	end
+
+	RainbowLine.Visible = false
+	TargetInfo.Visible = false
+end
+
+ToggleButton.MouseButton1Click:Connect(function()
+	isMinimized = not isMinimized
+	ScrollingFrame.Visible = false
+	ResetButton.Visible = false
+	ConfirmFrame.Visible = false
+
+	if isMinimized then
+		ToggleButton.Text = "+"
+		MainFrame:TweenSize(
+			UDim2.new(0, 220, 0, 35),
+			Enum.EasingDirection.Out,
+			Enum.EasingStyle.Quart,
+			0.2,
+			true
+		)
+	else
+		ToggleButton.Text = "-"
+		MainFrame:TweenSize(
+			UDim2.new(0, 220, 0, 300),
+			Enum.EasingDirection.Out,
+			Enum.EasingStyle.Quart,
+			0.2,
+			true,
+			function(status)
+				if status == Enum.TweenStatus.Completed and not isMinimized then
+					ScrollingFrame.Visible = true
+					ResetButton.Visible = true
+				end
+			end
+		)
+	end
+end)
+
+SaveButton.MouseButton1Click:Connect(function()
+	local char = LocalPlayer.Character
+	if char and char:FindFirstChild("HumanoidRootPart") then
+		if savedPosition == nil then
+			savedPosition = char.HumanoidRootPart.CFrame
+			Title.Text = "บันทึกตำแหน่งแล้ว"
+		else
+			ConfirmFrame.Visible = true
+		end
+	end
+end)
+
+YesButton.MouseButton1Click:Connect(function()
+	local char = LocalPlayer.Character
+	if char and char:FindFirstChild("HumanoidRootPart") then
+		savedPosition = char.HumanoidRootPart.CFrame
+		Title.Text = "บันทึกตำแหน่งใหม่แล้ว"
+	end
+	ConfirmFrame.Visible = false
+end)
+
+NoButton.MouseButton1Click:Connect(function()
+	ConfirmFrame.Visible = false
+end)
+
+TeleportButton.MouseButton1Click:Connect(function()
+	if savedPosition then
+		local char = LocalPlayer.Character
+		if char and char:FindFirstChild("HumanoidRootPart") then
+			char.HumanoidRootPart.CFrame = savedPosition
+		end
+	end
+end)
+
+RunService.RenderStepped:Connect(function()
+	if activeSpectatingPlayer then
+		if activeSpectatingPlayer.Character and activeSpectatingPlayer.Character:FindFirstChild("Humanoid") then
+			Camera.CameraSubject = activeSpectatingPlayer.Character.Humanoid
+
+			if activeSpectatingPlayer.Character:FindFirstChild("HumanoidRootPart") then
+				LocalPlayer:RequestStreamAroundAsync(activeSpectatingPlayer.Character.HumanoidRootPart.Position)
+			end
+		else
+			if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+				Camera.CameraSubject = LocalPlayer.Character.Humanoid
+			end
+		end
+	else
+		if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+			if Camera.CameraSubject ~= LocalPlayer.Character.Humanoid then
+				Camera.CameraSubject = LocalPlayer.Character.Humanoid
+			end
+		end
+	end
+
+	local target = activeSpectatingPlayer
+	if target and rainbowTargets[target] and target.Character then
+		local character = target.Character
+		local targetHRP = character:FindFirstChild("HumanoidRootPart")
+		local targetHumanoid = character:FindFirstChildOfClass("Humanoid")
+		local myCharacter = LocalPlayer.Character
+		local myHRP = myCharacter and myCharacter:FindFirstChild("HumanoidRootPart")
+
+		local highlight = playerHighlights[target]
+		if highlight then
+			local color = getRainbowColor()
+			highlight.FillColor = color
+			highlight.OutlineColor = color
+			highlight.Adornee = character
+		end
+
+		local color = getRainbowColor()
+		RainbowLine.BackgroundColor3 = color
+		TargetInfoStroke.Color = color
+
+		local button = playerButtons[target]
+		if button then
+			button.TextColor3 = color
+		end
+
+		if targetHRP and myHRP and targetHumanoid then
+			local camera = workspace.CurrentCamera
+			local screenStart, startVisible = camera:WorldToViewportPoint(myHRP.Position)
+			local screenEnd, endVisible = camera:WorldToViewportPoint(targetHRP.Position)
+
+			if startVisible or endVisible then
+				local dx = screenEnd.X - screenStart.X
+				local dy = screenEnd.Y - screenStart.Y
+				local distance = math.sqrt(dx * dx + dy * dy)
+
+				RainbowLine.Position = UDim2.fromOffset(screenStart.X, screenStart.Y)
+				RainbowLine.Size = UDim2.fromOffset(distance, 3)
+				RainbowLine.Rotation = math.deg(math.atan2(dy, dx))
+				RainbowLine.Visible = true
+			else
+				RainbowLine.Visible = false
+			end
+
+			local distanceStuds = (myHRP.Position - targetHRP.Position).Magnitude
+			local health = math.max(0, math.floor(targetHumanoid.Health))
+			local maxHealth = math.floor(targetHumanoid.MaxHealth)
+
+			TargetInfo.Text =
+				"  ชื่อเล่น: " .. target.DisplayName ..
+				"\n  ชื่อบัญชี: @" .. target.Name ..
+				"\n  เลือด: " .. health .. " / " .. maxHealth ..
+				"\n  ระยะ: " .. math.floor(distanceStuds) .. " studs"
+
+			TargetInfo.Visible = true
+
+			local viewport = camera.ViewportSize
+			local infoX = math.clamp(screenEnd.X + 14, 4, math.max(4, viewport.X - 234))
+			local infoY = math.clamp(screenEnd.Y - 38, 4, math.max(4, viewport.Y - 80))
+			TargetInfo.Position = UDim2.fromOffset(infoX, infoY)
+		else
+			RainbowLine.Visible = false
+			TargetInfo.Visible = false
+		end
+	else
+		RainbowLine.Visible = false
+		TargetInfo.Visible = false
+	end
+
+	for player in pairs(rainbowTargets) do
+		if player.Parent then
+			local highlight = playerHighlights[player]
+			if highlight then
+				local character = player.Character
+				if character then
+					highlight.Adornee = character
+					local color = getRainbowColor()
+					highlight.FillColor = color
+					highlight.OutlineColor = color
+				end
+			end
+
+			local button = playerButtons[player]
+			if button and button.Parent then
+				button.TextColor3 = getRainbowColor()
+			end
+		end
+	end
+end)
+
+local function teleportToPlayerFront(targetPlayer)
+	local myChar = LocalPlayer.Character
+	local targetChar = targetPlayer.Character
+
+	if myChar and myChar:FindFirstChild("HumanoidRootPart") and targetChar and targetChar:FindFirstChild("HumanoidRootPart") then
+		local targetHRP = targetChar.HumanoidRootPart
+		local myHRP = myChar.HumanoidRootPart
+
+		local frontCFrame = targetHRP.CFrame * CFrame.new(0, 0, -3.5) * CFrame.Angles(0, math.pi, 0)
+		myHRP.CFrame = frontCFrame
+	end
+end
+
+local function updatePlayerList()
+	for _, child in pairs(ScrollingFrame:GetChildren()) do
+		if child:IsA("Frame") then
+			child:Destroy()
+		end
+	end
+
+	playerButtons = {}
+
+	for _, player in pairs(Players:GetPlayers()) do
+		if player ~= LocalPlayer then
+			local ItemFrame = Instance.new("Frame")
+			ItemFrame.Name = player.Name
+			ItemFrame.Size = UDim2.new(1, -5, 0, 30)
+			ItemFrame.BackgroundTransparency = 1
+			ItemFrame.Parent = ScrollingFrame
+
+			local AvatarImage = Instance.new("ImageLabel")
+			AvatarImage.Name = "AvatarImage"
+			AvatarImage.Size = UDim2.new(0, 26, 0, 26)
+			AvatarImage.Position = UDim2.new(0, 2, 0.5, -13)
+			AvatarImage.BackgroundTransparency = 1
+			AvatarImage.Parent = ItemFrame
+
+			local AvatarCorner = Instance.new("UICorner")
+			AvatarCorner.CornerRadius = UDim.new(1, 0)
+			AvatarCorner.Parent = AvatarImage
+
+			task.spawn(function()
+				local success, thumbnail = pcall(function()
+					return Players:GetUserThumbnailAsync(player.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size48x48)
+				end)
+				if success and AvatarImage.Parent then
+					AvatarImage.Image = thumbnail
+				end
+			end)
+
+			local PlayerButton = Instance.new("TextButton")
+			PlayerButton.Name = "PlayerButton"
+			PlayerButton.Size = UDim2.new(1, -67, 1, 0)
+			PlayerButton.Position = UDim2.new(0, 32, 0, 0)
+			PlayerButton.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+			PlayerButton.Text = player.DisplayName .. " (@" .. player.Name .. ")"
+			PlayerButton.TextColor3 = Color3.fromRGB(200, 200, 200)
+			PlayerButton.TextSize = 11
+			PlayerButton.Font = Enum.Font.Gotham
+			PlayerButton.Parent = ItemFrame
+
+			playerButtons[player] = PlayerButton
+
+			local BtnCorner = Instance.new("UICorner")
+			BtnCorner.CornerRadius = UDim.new(0, 4)
+			BtnCorner.Parent = PlayerButton
+
+			local TpButton = Instance.new("TextButton")
+			TpButton.Name = "TpButton"
+			TpButton.Size = UDim2.new(0, 30, 1, 0)
+			TpButton.Position = UDim2.new(1, -30, 0, 0)
+			TpButton.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+			TpButton.Text = "☄️"
+			TpButton.TextSize = 14
+			TpButton.Parent = ItemFrame
+
+			local TpCorner = Instance.new("UICorner")
+			TpCorner.CornerRadius = UDim.new(0, 4)
+			TpCorner.Parent = TpButton
+
+			PlayerButton.MouseButton1Click:Connect(function()
+				clickCounts[player] = (clickCounts[player] or 0) + 1
+				local count = clickCounts[player]
+
+				if count >= 1 and count <= 4 then
+					activeSpectatingPlayer = player
+					Title.Text = "ส่อง: " .. player.DisplayName
+					clearRainbow(player)
+				elseif count == 5 then
+					activeSpectatingPlayer = player
+					Title.Text = "ส่อง: " .. player.DisplayName
+					enableRainbow(player)
+				elseif count == 6 or count == 7 then
+					activeSpectatingPlayer = player
+					Title.Text = "ส่อง: " .. player.DisplayName
+					if not rainbowTargets[player] then
+						enableRainbow(player)
+					end
+				elseif count >= 8 then
+					resetTarget(player)
+				end
+
+				updateActiveBarColor()
+			end)
+
+			TpButton.MouseButton1Click:Connect(function()
+				teleportToPlayerFront(player)
+			end)
+
+			if player.Character then
+				player.CharacterAdded:Connect(function(character)
+					if rainbowTargets[player] then
+						task.wait(0.5)
+						if player.Character == character then
+							enableRainbow(player)
+						end
+					end
+				end)
+			end
+		end
+	end
+
+	ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, UIListLayout.AbsoluteContentSize.Y)
+	updateActiveBarColor()
+end
+
+Players.PlayerAdded:Connect(function(player)
+	updatePlayerList()
+
+	player.CharacterAdded:Connect(function(character)
+		if rainbowTargets[player] then
+			task.wait(0.5)
+			if player.Character == character then
+				enableRainbow(player)
+			end
+		end
+	end)
+end)
+
+Players.PlayerRemoving:Connect(function(player)
+	if activeSpectatingPlayer == player then
+		activeSpectatingPlayer = nil
+		Title.Text = "PLAYER SPECTATE"
+	end
+
+	clearRainbow(player)
+	clickCounts[player] = nil
+	playerButtons[player] = nil
+
+	updatePlayerList()
+end)
+
+ResetButton.MouseButton1Click:Connect(function()
+	activeSpectatingPlayer = nil
+	Title.Text = "PLAYER SPECTATE"
+	clearAllRainbow()
+	updateActiveBarColor()
+end)
+
+updatePlayerList()
